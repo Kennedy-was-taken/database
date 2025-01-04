@@ -219,9 +219,9 @@ namespace database.Databases.MSSQL
 
         }
 
-        public List<string> searchDatabase(string dbName)
+        public List<string>? searchDatabase(string dbName)
         {
-            List<string> names = new List<string>();
+            List<string>? names = new List<string>();
 
             using (SqlConnection conn = new(GetConnectionString()))
             {

@@ -17,7 +17,7 @@ namespace Backup
             var builder = new ConfigurationBuilder();
 
             //sets the path
-            var jsonpath = "C:\\database\\database";
+            string jsonpath = "C:\\database\\database";
 
             //reads from the appsetting.json
             builder.SetBasePath(jsonpath)

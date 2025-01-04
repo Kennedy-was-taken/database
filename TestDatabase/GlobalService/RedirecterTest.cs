@@ -29,7 +29,7 @@ namespace TestDatabase
 
         }
 
-        [Fact, TestPriority(2)]
+        [Fact, TestPriority(1)]
         public void TestCommandHelp()
         {
             try
@@ -58,9 +58,13 @@ namespace TestDatabase
         [Fact, TestPriority(3)]
         public void TestCommandRandom()
         {
+            if(configuration is null)
+            { 
+                setConfiguration();
+            }
+
             try
             {
-                setConfiguration();
 
                 if (configuration != null)
                 {
@@ -81,12 +85,16 @@ namespace TestDatabase
 
         }
 
-        [Fact, TestPriority(5)]
+        [Fact, TestPriority(4)]
         public void TestCommand2Help()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -107,12 +115,16 @@ namespace TestDatabase
         }
 
 
-        [Fact, TestPriority(7)]
+        [Fact, TestPriority(5)]
         public void TestCommand2Random()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -132,12 +144,16 @@ namespace TestDatabase
             }
         }
 
-        [Fact, TestPriority(8)]
+        [Fact, TestPriority(6)]
         public void TestCommand3()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -157,12 +173,16 @@ namespace TestDatabase
             }
         }
 
-        [Fact, TestPriority(9)]
+        [Fact, TestPriority(7)]
         public void TestCommand3Restore()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -182,12 +202,16 @@ namespace TestDatabase
             }
         }
 
-        [Fact, TestPriority(10)]
+        [Fact, TestPriority(8)]
         public void TestCommand3Help()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -207,12 +231,16 @@ namespace TestDatabase
             }
         }
 
-        [Fact, TestPriority(11)]
+        [Fact, TestPriority(9)]
         public void TestCommand3Random()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {
@@ -232,13 +260,16 @@ namespace TestDatabase
             }
         }
 
-        [Fact, TestPriority(12)]
+        [Fact, TestPriority(10)]
         public void TestCommand3RandomSpace()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
 
+            try
+            {
                 if (configuration != null)
                 {
                     string[] args = { "--sql", "--backup", " " };
@@ -257,7 +288,121 @@ namespace TestDatabase
             }
         }
 
+        [Fact, TestPriority(11)]
+        public void TestCommand3BackupSearch()
+        {
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
 
+            try
+            {
+
+                if (configuration != null)
+                {
+                    string[] args = { "--sql", "--backup", "sonar" };
+
+                    redirector = new(configuration);
+
+                    redirector.Command(args, "--sql", "backup");
+
+                    Assert.True(true);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
+        [Fact, TestPriority(12)]
+        public void TestCommand3RestoreSearch()
+        {
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
+
+            try
+            {
+
+                if (configuration != null)
+                {
+                    string[] args = { "--sql", "--restore", "sonar" };
+
+                    redirector = new(configuration);
+
+                    redirector.Command(args, "--sql", "restore");
+
+                    Assert.True(true);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
+        [Fact, TestPriority(12)]
+        public void TestCommand3SearchNotFoundBackup()
+        {
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
+
+            try
+            {
+
+                if (configuration != null)
+                {
+                    string[] args = { "--sql", "--backup", "sffsrf" };
+
+                    redirector = new(configuration);
+
+                    redirector.Command(args, "--sql", "backup");
+
+                    Assert.False(false);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
+        [Fact, TestPriority(12)]
+        public void TestCommand3SearchNotFoundRestore()
+        {
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
+
+            try
+            {
+
+                if (configuration != null)
+                {
+                    string[] args = { "--sql", "--restore", "sffsrf" };
+
+                    redirector = new(configuration);
+
+                    redirector.Command(args, "--sql", "restore");
+
+                    Assert.False(false);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
 
     }
 }

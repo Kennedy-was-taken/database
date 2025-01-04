@@ -1,4 +1,5 @@
-﻿using database;
+﻿using Azure;
+using database;
 using database.Databases.MSSQL;
 using database.GlobalService;
 using Microsoft.Extensions.Configuration;
@@ -10,33 +11,35 @@ namespace database
     public class Redirector
     {
         private readonly IConfiguration configuration;
+        private MssqlService? mssqlService;
+        private readonly Init init;
 
         public Redirector(IConfiguration configuration)
         {
             this.configuration = configuration;
+            this.init = new (configuration);
         }
 
         public void Command(string[] arg)
         {
-            Init init = new(configuration);
-            string? dbName = null;
+            string? dbType = null;
 
             switch (arg[0])
             {
                 case "--sql":
-                    dbName = "sqlserver";
+                    dbType = "sqlserver";
                     break;
 
                 case "--oracle":
-                    dbName = "oracle";
+                    dbType = "oracle";
                     break;
 
                 case "--postgre":
-                    dbName = "postgre";
+                    dbType = "postgre";
                     break;
 
                 case "--mysql":
-                    dbName = "mysql";
+                    dbType = "mysql";
                     break;
 
                 case " ":
@@ -55,96 +58,94 @@ namespace database
 
             }
 
-            if (dbName != null)
+            if (dbType != null)
             {
-                if (arg.Length > 1)
+                if (arg.Length >= 1)
                 {
-                    Command(arg, dbName);
+                    Command(arg, dbType);
                 }
 
                 else
                 {
-                    ServiceResponse<bool> serviceResponse = init.validateDatabase(dbName);
+                    ServiceResponse<bool> serviceResponse = init.validateDatabase(dbType);
 
-                    init.validationResult(serviceResponse, dbName);
+                    init.validationResult(serviceResponse, dbType);
 
                 }
             }
         }
 
-        public void Command(string[] arg, string dbName)
+        public void Command(string[] arg, string dbType)
         {
-            Init init = new(configuration);
-
-            string? type = null;
+            string? option = null;
 
             switch (arg[1])
             {
                 case "--backup":
-                    type = "backup";
+                    option = "backup";
                     break;
 
                 case "--restore":
-                    type = "restore";
+                    option = "restore";
                     break;
 
                 case "--help":
-                    Help(dbName);
+                    Help(dbType);
                     break;
 
                 default:
-                    Help(dbName);
+                    Help(dbType);
                     break;
             }
 
-            if (type != null)
+            if (option != null)
             {
-                if (arg.Length > 2)
+                if (arg.Length >= 2)
                 {
-                    Command(arg, dbName, type);
+                    Command(arg, dbType, option);
                 }
 
                 else
                 {
-                    init.Redirector(dbName, type);
+                    init.Redirector(dbType, option);
                 }
             }
 
         }
 
-        public void Command(string[] arg, string dbName, string type)
+        public void Command(string[] arg, string dbType, string option)
         {
 
             if (arg[2].Equals("backup all", StringComparison.OrdinalIgnoreCase) || arg[2].Equals("restore all", StringComparison.OrdinalIgnoreCase))
             {
-                SetClassMethods(dbName, type, arg[2].ToLower());
+                SetClassMethods(dbType, option, arg[2].ToLower());
             }
 
             else if (arg[2].Equals("--help", StringComparison.OrdinalIgnoreCase))
             {
-                Help(dbName, type);
+                Help(dbType, option);
             }
 
             else if (arg[2].Contains('-') || arg[2].ToLower().IsNullOrEmpty() || arg[2].Equals(" ", StringComparison.OrdinalIgnoreCase))
             {
-                Help(dbName, type);
+                Help(dbType, option);
             }
 
             else
             {
-                BeginSearch(arg, dbName, type);
+                BeginSearch(arg, dbType, option);
             }
         }
 
-        private void SetClassMethods(string dbName, string type, string command)
+        private void SetClassMethods(string dbType, string option, string command)
         {
             dynamic? classHolder = null;
 
-            switch (dbName)
+            switch (dbType)
             {
                 case "sqlserver":
                     classHolder = new MssqlService(configuration);
-                    StartProcess(classHolder, type, command);
+                    StartProcess(classHolder, option, command);
                     break;
 
                 case "oracle":
@@ -166,7 +167,7 @@ namespace database
 
         }
 
-        private void StartProcess(dynamic classHolder, string type, string command)
+        private void StartProcess(dynamic classHolder, string option, string command)
         {
             if (command == "backup all")
             {
@@ -174,7 +175,7 @@ namespace database
 
                 if (backupService.isSuccess)
                 {
-                    classHolder.BackupOrRestore(backupService.data, type);
+                    classHolder.BackupOrRestore(backupService.data, option);
                 }
 
                 else
@@ -189,7 +190,7 @@ namespace database
 
                 if (restoreService.isSuccess)
                 {
-                    classHolder.BackupOrRestore(restoreService.data, type);
+                    classHolder.BackupOrRestore(restoreService.data, option);
                 }
 
                 else
@@ -199,37 +200,124 @@ namespace database
             }
         }
 
-        private void BeginSearch(string[] arg, string dbName, string type)
+        private void BeginSearch(string[] arg, string dbType, string option)
         {
+            // initializing instance
+            mssqlService = new MssqlService(configuration);
+
+            // will be used to hold different types of instances
+            dynamic? classHolder = null;
+
             ServiceResponse<List<string>> service = new();
 
-            switch (arg[0])
+            switch (dbType)
             {
-                case "--sql":
-                    MssqlService mssqlService = new(configuration);
-                    service = mssqlService.searchDatabase(dbName);
+                case "sqlserver":
+                    classHolder = mssqlService;
+                    service = classHolder.searchDatabase(arg[2].ToString());
                     break;
 
-                case "--oracle":
-                    dbName = "oracle";
+                case "oracle":
+                    dbType = "oracle";
                     break;
 
-                case "--postgre":
-                    dbName = "postgre";
+                case "postgre":
+                    dbType = "postgre";
                     break;
 
-                case "--mysql":
-                    dbName = "mysql";
+                case "mysql":
+                    dbType = "mysql";
                     break;
             }
 
-            if (service.data.Count > 1)
+            if (service.isSuccess)
             {
 
+                if (service.data?.Count == 1)
+                {
+                    classHolder?.BackupOrRestore(arg[2].ToString(), option);
+                }
+
+                else
+                {
+                    SelectDatabase(service, dbType, option);
+                }
+            }
+
+            else
+            {
+                Console.WriteLine(service.message);
             }
         }
+
+        private void SelectDatabase(ServiceResponse<List<string>> service, string dbType, string option)
+        {
+            int response = 0;
+            Console.WriteLine();
+            Console.WriteLine("Heres a list of known databases found : ");
+
+            for (int i = 0; i < service.data?.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {service.data[i]}");
+            }
+
+            while (true)
+            {
+                try
+                {
+                    Console.Write($"Select you option (e.g. 1) for {dbType}: ");
+                    var userInput = Console.ReadLine();
+
+                    if (userInput != null)
+                    {
+                        response = int.Parse(userInput.ToString());
+                    }
+
+                    if (response <= service.data?.Count && response != 0)
+                    {
+                        break;
+                    }
+
+                    else
+                    {
+                        Console.WriteLine("please enter a numerical value from the list");
+                    }
+                }
+
+                catch (Exception)
+                {
+                    Console.WriteLine("please enter a numerical value from the list");
+                }
+            }
+
+            BeginBackupOrRestore(dbType, service.data[response - 1].ToString(), option);
+
+        }
+
+        public void BeginBackupOrRestore(string dbType, string dbName, string option)
+        {
+            switch (dbType)
+            {
+                case "sqlserver":
+                    mssqlService?.BackupOrRestore(dbName, option);
+                    break;
+
+                case "oracle":
+                    
+                    break;
+
+                case "postgre":
+                    
+                    break;
+
+                case "mysql":
+                    
+                    break;
+            }
+        }
+
         //displaying "help" commands
-        private void Help()
+        private static void Help()
         {
             Console.WriteLine();
             Console.WriteLine("  database [option] \n");
@@ -240,20 +328,20 @@ namespace database
         }
 
         //overloading : displaying "help" commands of selected database name
-        private void Help(string dbName)
+        private static void Help(string dbType)
         {
             Console.WriteLine();
-            Console.WriteLine($"database --{dbName} [option] \n");
+            Console.WriteLine($"database --{dbType} [option] \n");
             Console.WriteLine("  --backup : a list of databases will be displayed to choose from, in order to backup.\n");
             Console.WriteLine("  --restore : a list of databases will be displayed to choose from, in order to restore the file.\n");
         }
 
         //overloading : displaying "help" commands of selected database name and type
-        private void Help(string dbName, string type)
+        private static void Help(string dbType, string option)
         {
             Console.WriteLine();
-            Console.WriteLine($"database --{dbName} --{type} [option] \n");
-            if (type == "backup")
+            Console.WriteLine($"database --{dbType} --{option} [option] \n");
+            if (option == "backup")
             {
                 Console.WriteLine("  enter \"backup all\" : The process will start to backup all the databases found on the chosen database.\n");
                 Console.WriteLine("  enter database name : enter the name of the database you wish to backup, it will search for the database." +

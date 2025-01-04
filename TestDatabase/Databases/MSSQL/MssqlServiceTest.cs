@@ -7,8 +7,8 @@ using Microsoft.Extensions.Configuration;
 namespace TestDatabase.MSSQL
 {
     [TestCaseOrderer(
-    ordererTypeName: "TestBackup.PriorityOrderer",
-    ordererAssemblyName: "TestBackup")]
+    ordererTypeName: "TestDatabase.PriorityOrderer",
+    ordererAssemblyName: "TestDatabase")]
     public class MssqlServiceTest
     {
         private IConfiguration? configuration;

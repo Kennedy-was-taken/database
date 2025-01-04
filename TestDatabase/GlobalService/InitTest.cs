@@ -1,9 +1,13 @@
 ﻿using database;
 using database.Databases.MSSQL;
 using Microsoft.Extensions.Configuration;
+using TestDatabase;
 
 namespace TestBackup
 {
+    [TestCaseOrderer(
+    ordererTypeName: "TestDatabase.PriorityOrderer",
+    ordererAssemblyName: "TestDatabase")]
     public class InitTest
     {
         private IConfiguration? configuration;
@@ -24,7 +28,7 @@ namespace TestBackup
 
         }
 
-        [Fact]
+        [Fact, TestPriority(1)]
         public void testPopulateDatabaseList()
         {
             try
@@ -52,12 +56,16 @@ namespace TestBackup
         }
 
 
-        [Fact]
+        [Fact, TestPriority(2)]
         public void testRedirector()
         {
-            try
+            if (configuration is null)
             {
                 setConfiguration();
+            }
+
+            try
+            {
 
                 if (configuration != null)
                 {

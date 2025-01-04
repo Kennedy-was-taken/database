@@ -3,9 +3,13 @@ using Xunit;
 using System.IO;
 using database.Databases.MSSQL;
 using System.Data;
+using TestDatabase;
 
 namespace TestBackup
 {
+    [TestCaseOrderer(
+    ordererTypeName: "TestDatabase.PriorityOrderer",
+    ordererAssemblyName: "TestDatabase")]
     public class MssqlTest
     {
         private IConfiguration? configuration;
@@ -28,7 +32,7 @@ namespace TestBackup
 
         }
 
-        [Fact]
+        [Fact, TestPriority(1)]
         public void testConnection()
         {
             setConfiguration();
@@ -47,10 +51,13 @@ namespace TestBackup
             Assert.True(isConnected);
         }
 
-        [Fact]
+        [Fact, TestPriority(2)]
         public void retrieveDbName()
         {
-            setConfiguration();
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
 
             if (configuration != null)
             {
@@ -81,10 +88,13 @@ namespace TestBackup
             }
         }
 
-        [Fact]
+        [Fact, TestPriority(3)]
         public void testBackup()
         {
-            setConfiguration();
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
 
             if (configuration != null)
             {
@@ -128,10 +138,13 @@ namespace TestBackup
 
         }
 
-        [Fact]
+        [Fact, TestPriority(4)]
         public void testRestore()
         {
-            setConfiguration();
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
 
             if (configuration != null)
             {
@@ -161,10 +174,14 @@ namespace TestBackup
             }
         }
 
-        [Fact]
+        [Fact, TestPriority(5)]
         public void testGetFileNames()
         {
-            setConfiguration();
+
+            if (configuration is null)
+            {
+                setConfiguration();
+            }
 
             if (configuration != null)
             {

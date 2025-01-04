@@ -1,7 +1,6 @@
 ﻿using database;
 using database.GlobalService;
 using Microsoft.Extensions.Configuration;
-using Microsoft.SqlServer.Management.Smo.Wmi;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
@@ -197,7 +196,16 @@ namespace database.Databases.MSSQL
                 case "backup":
 
                     var result = CheckBackupExists(dbName);
-                    Console.WriteLine($"Attempting to Backup {dbName}");
+
+                    if (result.data.Equals(true))
+                    {
+                        Console.WriteLine($"Attempting to make a Differential Backup {dbName}");
+                    }
+
+                    else
+                    {
+                        Console.WriteLine($"Attempting to make a Full Backup of {dbName}");
+                    }
 
                     var backupResult = BackupDatabase(dbName, result.data);
 
@@ -449,9 +457,9 @@ namespace database.Databases.MSSQL
 
             var results = repository.searchDatabase(dbName);
 
-            if (results != null)
+            if (results != null && results?.Count != 0)
             {
-                if (results.Count > 1)
+                if (results?.Count > 1)
                 {
 
                     service.data = results;

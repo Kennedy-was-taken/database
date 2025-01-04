@@ -20,21 +20,35 @@ namespace database
         [ExcludeFromCodeCoverage]
         public void begin()
         {
-            PopulateDatabaseList();
+            if (PopulateDatabaseList())
+            {
+                DisplayDatabases();
+            }
 
-            DisplayDatabases();
+            else
+            {
+                Console.WriteLine("No ConnectionString was found on the appsetting.json");
+                Console.WriteLine("Replace this appsetting.json with the repository you downloaded it from");
+            }
+            
         }
 
-        public void PopulateDatabaseList()
+        public bool PopulateDatabaseList()
         {
             dbNames = new List<string>();
-            var Databases = configuration.GetSection("Databases");
+            var Databases = configuration.GetSection("ConnectionStrings");
+
+            if (Databases is null)
+            {
+                return false;
+            }
 
             foreach (var item in Databases.GetChildren())
             {
                 dbNames.Add(item.Key);
             }
 
+            return true;
         }
 
         [ExcludeFromCodeCoverage]
@@ -183,12 +197,6 @@ namespace database
                     {
                         Console.WriteLine("please enter a numerical value from the list");
                     }
-                }
-
-                catch (InvalidCastException)
-                {
-                    Console.WriteLine("please enter a numerical value from the list");
-
                 }
 
                 catch (Exception)
