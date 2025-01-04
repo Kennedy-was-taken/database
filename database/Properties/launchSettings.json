@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "database": {
+      "commandName": "Project",
+      "environmentVariables": {
+      }
+    }
+  }
+}
